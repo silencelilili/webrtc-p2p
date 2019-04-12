@@ -9,7 +9,7 @@
     "package:mac": "electron-packager ./ --overwrite --platform=darwin --arch=x64 --out=myapp --icon=assets/app-icon/mac/app.icns --ignore=node_modules",
     "package:win": "electron-packager ./ --overwrite --platform=win32 --arch=x64 --out=myapp --icon=assets/app-icon/win/app.ico --ignore=node_modules"
   },
-  "author": "lixd@svocloud.com",
+  "author": "lixuelan1007@126.com",
   "license": "ISC",
   "dependencies": {
     "express": "^4.16.4"
