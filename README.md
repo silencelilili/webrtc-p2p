@@ -23,7 +23,7 @@
 # Clone this repository
 git clone https://github.com/silenceLXD/webrtc-p2p.git
 # Go into the repository
-cd webrtc-p2p-demo
+cd webrtc-p2p
 # Install dependencies
 npm install
 # Run the app
