@@ -1,0 +1,177 @@
+body{
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 14px;
+  color: #fff;
+  background: #000000;
+}
+
+/* 登录部分 */
+.login-page{
+  padding: 0 20px 60px 80px;
+  /* margin: 50px auto; */
+  width: 50%;
+  box-shadow: 0 0 45px #ccc;
+  border-radius: 8px;
+  background: #06060673;
+  position: relative;
+  top: 50%;
+  left: 50%;
+  margin: 0;
+  transform: translate(-50%,-50%);
+}
+.login-bg{
+  background: #97bceac4;
+  height: 100%;
+  width: 100%;
+  /* overflow: auto; */
+  position: absolute;
+}
+.inline{
+  display: inline-block;
+}
+/* 视频主体部分 */
+.main-conn{
+  position: relative;
+  color: #fff;
+}
+.video-div{
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  width: 100%;
+  transform: translate(-50%,-50%);
+  text-align: center;
+}
+.local-video{
+
+}
+.remote-video{
+  display: none;
+}
+.main-video{
+  width: 100%;
+  height: 100%;
+  background-color: #000;
+}
+.right-video{
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  max-width: 240px;
+  height: 220px;
+  /* background-color: #fff; */
+  z-index: 999;
+}
+.user-msg{
+  font-size: 16px;
+  color: #fff;
+  z-index: 999;
+  position: absolute;
+  top: 10px;
+  left: 20px;
+  background: #0000006b;
+  padding: 10px 30px;
+  border-radius: 5px;
+  box-shadow: 0 0 10px #fff;
+}
+/* 工具操作部分 */
+.tool-bar{
+  z-index: 1;
+  position: fixed;
+  bottom: 26px;
+  left: 50%;
+  margin-left: -300px;
+}
+            
+.call-name{
+  display: inline-block;
+  vertical-align: middle;
+  height: 80px;
+}
+.callname-input{
+  background: transparent;
+  width: 200px;
+  margin: 10px auto;
+  color: #fff;
+}
+.tool-bar .tool-item{
+  display: inline-block;
+  width: 60px;
+  height: 60px;
+  /* border: 1px solid #fff; */
+  box-shadow: 0 0 15px #fff;
+  border-radius: 50%;
+  margin: 5px 10px;
+  padding: 10px;
+}
+.tool-bar .tool-item .tool-icon{
+  display: inline-block;
+  width: 100%;
+  height: 100%;
+  background-repeat: no-repeat;
+  background-size: contain; 
+}
+/* 呼叫 */
+.call-icon{
+  background-image: url('../img/call1.png')
+}
+/* 挂断 远端 */
+#hang-up{
+  display: none;
+}
+.hangup-icon{
+  background-image: url('../img/hangup.png')
+}
+
+/* 挂断本地 */
+.disconnect-icon{
+  background-image: url('../img/disconnect.png')
+}
+
+/* 摄像头 */
+.camera-icon-on{
+  background-image: url('../img/camera_on.png')
+}
+.camera-icon-off{
+  background-image: url('../img/camera_off.png')
+}
+
+/* 麦克风 */
+.microphone-icon-on{
+  background-image: url('../img/microphone_on.png')
+}
+.microphone-icon-off{
+  background-image: url('../img/microphone_off.png')
+}
+/* 流信息 */
+.statics-icon {
+  background-image: url('../img/statics.png')
+}
+#statistics{
+  position: fixed;
+  right: 20px;
+  bottom: 21px;
+  box-shadow: none;
+}
+/* 展示数据流信息 */
+.statistic-modal{
+  position: fixed;
+  top: 10%;
+  left: 50%;
+  margin-left: -300px;
+  width: 600px;
+  height: 420px;
+  box-shadow: 0 0 15px #fff;
+  padding: 15px;
+  display: none;
+  color: #fff;
+  background: #23222280;
+}
+.statistic-modal ul li{
+  list-style: none;
+}
+li.li-title{
+  margin-left: -6px; 
+  margin-top: 12px;
+  font-weight: bold;
+}

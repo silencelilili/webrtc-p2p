@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>4k视频会议</title>
+  <link rel="stylesheet" type="text/css" href="js/lib/bootstrap/css/bootstrap.css">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <section class="">
+    <!-------------------------- 登录 -------------------------------------->
+    <div id="login-page" class="login-bg">
+      <div class="container login-page">
+        <!-- <div class="row" style="margin: 15px 0;">
+          <label class="col-xs-2 text-right" for="roomnumber">Room:</label>
+          <div class="col-xs-4">
+            <input type="text" class="form-control" id="roomnumber">
+          </div>
+        </div> -->
+        <div class="row text-center" style="margin: 35px 0;">
+          <!-- <h4>登 录</h4> -->
+        </div>
+        <!-- 用户名 -->
+        <div class="row" style="margin: 15px 0;">
+          <label class="col-xs-2 text-right" for="username">Name:</label>
+          <div class="col-xs-4">
+            <input type="text" class="form-control" id="username">
+          </div>
+        </div>
+        <!-- 设置分辨率 -->
+        <div class="row" style="margin: 15px 0;">
+          <label class="col-xs-2 text-right" for="resolution">Resolution:</label>
+          <div class="col-xs-4">
+            <select name="resolution" class="form-control" id="resolution" onchange="chooseResolution()">
+              <option value="qvga">QVGA</option>
+              <option value="vga">VGA</option>
+              <option value="hd">HD</option>
+              <option value="fullHd">Full HD</option>
+              <option value="twoK">2K</option>
+              <option value="threeK">4K</option>
+              <option value="fourK">4.1K</option>
+              <option value="eightK">8K</option>
+            </select>
+          </div>
+        </div>
+        <!-- 媒体设备选择 -->
+        <div class="row" style="margin: 15px 0;">
+          <label class="col-xs-2 text-right" for="">Devices: </label>
+          <div class="col-xs-10">
+              <div class="select">
+                  <label for="videoSource">Video source: 
+                    <select class="form-control inline" id="videoSource"></select>
+                  </label>
+              </div>
+              <div class="select">
+                <label for="audioSource">Audio input source: 
+                    <select class="form-control inline" id="audioSource"></select>
+                </label>
+              </div>
+              <div class="select">
+                  <label for="audioOutput">Audio output destination: 
+                    <select class="form-control inline" id="audioOutput"></select>
+                  </label>
+              </div>
+          </div>
+            
+        </div>
+        <div class="row text-center">
+            <button class="btn btn-success" id="login" style="width:120px;" onclick="handleLogin()">Login</button>
+        </div>
+      </div>
+    </div>
+    
+    <!-- --------------------------------------------------------------- -->
+    
+    <!-------------------------- 主体部分 -------------------------------------->
+    <div id="call-page" class="main-conn">
+      <!-- 个人信息 -->
+      <div class="user-msg">
+        <p>Name：<span id="curr-user"></span></p>
+        <!-- <p>已选择分辨率：<span id="curr-resolution"></span></p> -->
+      </div>
+      <!-- 视频画面 -->
+      <div class="video-div">
+        <!-- 本地画面 -->
+        <video id="localVideo" class="local-video main-video" autoplay></video>
+        <!-- 远端画面 -->
+        <video id="remoteVideo" class="remote-video" autoplay></video>
+      </div>
+
+      <!-- 操作栏 -->
+      <div class="tool-bar">
+        <div>
+          <div class="call-name">
+              <input type="text" class="form-control callname-input" id="theirs-username" placeholder="Call Name"/>
+          </div>
+          
+          <!-- 呼叫 -->
+          <span class="tool-item" id="call" onclick="handleCall()">
+            <a href="javascript:;" class="tool-icon call-icon" title="呼叫"></a>
+          </span>
+          <!-- 挂断 远端 -->
+          <span class="tool-item" id="hang-up" onclick="handleHangUp()">
+            <a href="javascript:;" class="tool-icon hangup-icon" title="断开与对方的连接"></a>
+          </span>
+          
+          <!-- 摄像头开关 -->
+          <span class="tool-item" onclick="handleCamera()">
+            <a href="javascript:;" id="toggleCamera" class="tool-icon camera-icon-on" title="摄像头"></a>
+          </span>
+          <!-- 麦克风开关 -->
+          <span class="tool-item" onclick="handleMicrophone()">
+            <a href="javascript:;" id="toggleMicrophone" class="tool-icon microphone-icon-on" title="麦克风"></a>
+          </span>
+          <!-- 挂断 本地 -->
+          <span class="tool-item" id="disconnect" onclick="handleDisconnect()">
+            <a href="javascript:;" class="tool-icon disconnect-icon" title="断开本地连接"></a>
+          </span>
+          <!-- 流信息 -->
+          <span class="tool-item" id="statistics" onclick="getCallStatistics()">
+            <a href="javascript:;" class="tool-icon statics-icon" title="视频流信息"></a>
+          </span>
+
+        </div>
+      </div>
+
+      <!-- 展示视频流信息 -->
+      <div class="statistic-modal" id="statisticModal">
+        <div class="col-xs-6">
+          <h4>Outgoing</h4>
+          <ul id="outgoing"></ul>
+        </div>
+        <div class="col-xs-6">
+          <h4>Incoming</h4>
+          <ul id="incoming"></ul>
+        </div>
+      </div>
+    </div>
+    <!-- --------------------------------------------------------------- -->
+
+    
+  </section>
+
+  <!-- <script src="js/lib/jquery-3.3.1.min.js"></script> -->
+  <script type="text/javascript" src="js/lib/adapter.js"></script>
+  <!-- <script type="text/javascript" src="js/lib/bootstrap/js/bootstrap.min.js"></script> -->
+  <script type="text/javascript" src="js/stats.js"></script>
+  <script type="text/javascript" src="js/main.js"></script>
+</body>
+</html>
