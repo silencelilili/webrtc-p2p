@@ -6,7 +6,9 @@ var connectedUser; //被呼叫的用户名
 var dataChannel;
 var stats = new Statistics();
 // websocket 服务端消息监听处理
-var connection = new WebSocket('wss://wssocket.svocloud.cn');
+// var wsUrl = 'wss://172.18.4.45:8888';
+// var connection = new WebSocket(wsUrl);
+var socket = io.connect('https://wssocket.svocloud.cn');
 
 var loginPage = document.querySelector("#login-page"), //登陆页面
 
@@ -14,7 +16,7 @@ var loginPage = document.querySelector("#login-page"), //登陆页面
   roomnumberInput = document.querySelector("#roomnumber"), //房间号
 
   callPage = document.querySelector("#call-page"), //视频画面
-  theirUsernameInput = document.querySelector("#theirs-username"), //呼叫名称
+  // theirUsernameInput = document.querySelector("#theirs-username"), //呼叫名称
 
   hangUpBtn = document.querySelector("#hang-up"),
 
@@ -26,7 +28,7 @@ var loginPage = document.querySelector("#login-page"), //登陆页面
   messageInput = document.querySelector("#sendMessage"), //输入的聊天消息
   received = document.querySelector("#received"), //消息列表
   receivedChannel = document.querySelector("#received-channel"), //消息列表
-  
+
   dataChannelInput = document.querySelector("#sendChannel"); //输入的datachannel消息
   var resolution = document.querySelector("#resolution");
 
@@ -61,7 +63,7 @@ var loginPage = document.querySelector("#login-page"), //登陆页面
   // var callrtc;
   //呼叫（发起通话）
   function handleCall(){
-    theirUsername = theirUsernameInput.value;
+    theirUsername = selfname; //theirUsernameInput.value;
     if(theirUsername.length > 0){
       startPeerConnection(theirUsername);
     }else{
@@ -72,24 +74,30 @@ var loginPage = document.querySelector("#login-page"), //登陆页面
   function handleHangUp(){
     if(connectedUser){
       send({
-        type: 'leave',
+        type: 'hangup',
         name: connectedUser
       });
-      onLeave();
+      // onDisconnect();
     }else{
       alert("无远端连接用户！")
     }
   }
 
   // 断开本地链接
-  function handleDisconnect(){
+  function handleLeave(){
+    // if(remoteStream && connectedUser){
+      send({
+        type: 'hangup',
+        name: connectedUser
+      });
+    // }
     send({
-      type: 'disconnect',
+      type: 'leave',
       name: selfname
     });
-    send({
-      type: 'userlist',
-    });
+    // send({
+    //   type: 'userlist',
+    // });
     if(stats_interval){
       clearInterval(stats_interval)
       stats_interval = null;
@@ -98,7 +106,7 @@ var loginPage = document.querySelector("#login-page"), //登陆页面
       clearInterval(states);
       states = null;
     }
-    window.location.reload();
+
     // onDisconnect();
   }
 
@@ -148,53 +156,35 @@ var loginPage = document.querySelector("#login-page"), //登陆页面
     .catch(function(err){
 
     })
-    
   }
   /******************** websocket 监听消息 信令 ***********************/
-  connection.onopen = function () {
-    console.log("connected");
-  }
-  // 处理所有信息
-  connection.onmessage = function (message) {
-    console.log('got message', message.data);
-  
-    var data = JSON.parse(message.data);
-  
-    switch(data.type) {
-      case 'login':
-        onLogin(data);
-        break;
-      // case 'userlist':
-      //   onShowUserList(data);
-      //   break;
-      case 'offer':
-        receiveOffer(data.offer, data.name)
-        break;
-      case 'answer':
-        receiveAnswer(data.answer, data.name);
-        break;
-      case 'candidate':
-        receiveCandidate(data.candidate);
-        break;
-      case 'chats':
-        onReceivedChat(data);
-        break;
-      case 'leave':
-        onLeave();
-        break;
-      case 'disconnect':
-        onDisconnect(data);
-        break; 
-      case 'error':
-        onErrorMessage(data);
-        break;    
-    }
-  };
-  connection.onerror = function(err) {
-    console.log('got error', err);
-  };
+  socket.on('login', function(data){
+    onLogin(data);
+  })
+  socket.on('offer', function(data){
+    receiveOffer(data.offer, data.name)
+  })
+  socket.on('answer', function(data){
+    console.log('answer=====',data)
+    receiveAnswer(data.answer, data.name)
+  })
+  socket.on('candidate', function(data){
+    receiveCandidate(data.candidate)
+  })
+  // 断开房间
+  socket.on('leave', function(){
+    onLeave()
+  })
+  // 断开呼叫
+  socket.on('hangup', function(){
+    onDisconnect()
+  })
+  socket.on('error', function(data){
+    onErrorMessage(data)
+  })
+
   /***************************************************************************/
-  
+
 
   /*********** 事件定义 ************/
   function onLogin(data){
@@ -210,7 +200,7 @@ var loginPage = document.querySelector("#login-page"), //登陆页面
   function onShowUserList(data){
     addElement(data.list)
   }
-  
+
   // 收到聊天消息
   function onReceivedChat(data){
     console.log('Got chats message: ', data.data);
@@ -219,7 +209,7 @@ var loginPage = document.querySelector("#login-page"), //登陆页面
     }else{
       received.innerHTML += `<div><p class="text-right"><span class="msg-name msg-name-r">${data.sendname}</span> <span class="msg-count msg-count-r">${data.data} </span></p></div>`;//data.data + "："+ data.sendname+"<br />";
     }
-    
+
     received.scrollTop = received.scrollHeight;
   }
   /**
@@ -228,22 +218,25 @@ var loginPage = document.querySelector("#login-page"), //登陆页面
    * 2.告诉RTCPeerConnection进行关闭，停止发送数据流给其他用户
    * 3.再次设置链接，把连接实例设置为打开状态，以便我们接收新的通话
    */
-  function onLeave(){
+  function onDisconnect(){
     localVideo.className = 'main-video';
     remoteVideo.style.display = "none";
     hangUpBtn.style.display = "none";
     connectedUser = null;
+    remoteStream = null;
     remoteVideo.src = null;
+
     // localPeerConnection.close();
     // localPeerConnection.onicecandidate = null;
     // localPeerConnection.onaddstream = null;
     // setupPeerConnection(stream);
   }
-  function onDisconnect(data){
+  function onLeave(data){
     localVideo.src = null;
     localPeerConnection.close();
     localPeerConnection.onicecandidate = null;
-    localPeerConnection.onaddstream = null; 
+    localPeerConnection.onaddstream = null;
+    window.location.reload();
     // addElement(data.list)
     // window.location.reload();
   }
@@ -256,9 +249,9 @@ var loginPage = document.querySelector("#login-page"), //登陆页面
     if(navigator.mediaDevices){
       navigator.getUserMedia = navigator.mediaDevices.getUserMedia;
     }else{
-      navigator.getUserMedia = navigator.getUserMedia || 
-      navigator.webkitGetUserMedia || 
-      navigator.mozGetUserMedia || 
+      navigator.getUserMedia = navigator.getUserMedia ||
+      navigator.webkitGetUserMedia ||
+      navigator.mozGetUserMedia ||
       navigator.msGetUserMedia;
     }
     return !!navigator.getUserMedia;
@@ -268,15 +261,15 @@ var loginPage = document.querySelector("#login-page"), //登陆页面
     window.RTCPeerConnection = window.RTCPeerConnection ||
       window.webkitRTCPeerConnection ||
       window.mozRTCPeerConnection;
-    
+
     window.RTCSessionDescription = window.RTCSessionDescription ||
       window.webkitRTCSessionDescription ||
       window.mozRTCSessionDescription;
 
     window.RTCIceCandidate = window.RTCIceCandidate ||
       window.webkitRTCIceCandidate ||
-      window.mozRTCIceCandidate; 
-    
+      window.mozRTCIceCandidate;
+
     return !!window.RTCPeerConnection;
   }
   function hasFileApi(){
@@ -292,24 +285,24 @@ var loginPage = document.querySelector("#login-page"), //登陆页面
    * 3.创建RTCPeerConnection对象
    */
   // 选择分辨率
-  
+
   var constraintsList = {
-    qvga: {video: {width: {exact: 320}, height: {exact: 240}}, audio: true},
-    vga: {video: {width: {exact: 640}, height: {exact: 480}}, audio: true},
-    hd: {video: {width: {exact: 1280}, height: {exact: 720}}, audio: true},
-    fullHd: {video: {width: {exact: 1920}, height: {exact: 1080}}, audio: true},
-    twoK: {video: {width: {exact: 2168}, height: {exact: 1219}}, audio: true},
-    threeK: {video: {width: {exact: 3252}, height: {exact: 1829}}, audio: true},
-    fourK: {video: {width: {exact: 4096}, height: {exact: 2160}}, audio: true},
-    eightK: {video: {width: {exact: 7680}, height: {exact: 4320}}, audio: true}
+    qvga: {video: {width: {exact: 320}, height: {exact: 240}}, audio: {}},
+    vga: {video: {width: {exact: 640}, height: {exact: 480}}, audio: {}},
+    hd: {video: {width: {exact: 1280}, height: {exact: 720}}, audio: {}},
+    fullHd: {video: {width: {exact: 1920}, height: {exact: 1080}}, audio: {}},
+    twoK: {video: {width: {exact: 2168}, height: {exact: 1219}}, audio: {}},
+    threeK: {video: {width: {exact: 3252}, height: {exact: 1829}}, audio: {}},
+    fourK: {video: {width: {exact: 4096}, height: {exact: 2160}}, audio: {}},
+    eightK: {video: {width: {exact: 7680}, height: {exact: 4320}}, audio: {}}
   };
   var constraints = constraintsList['threeK'];
-  
+
   function chooseResolution() {
     let _value = resolution.value;
     constraints = constraintsList[_value];
   }
-  
+
   /************************************** 获取音视频设备 *************************************/
   const audioInputSelect = document.querySelector('select#audioSource');
   const audioOutputSelect = document.querySelector('select#audioOutput');
@@ -346,10 +339,10 @@ var loginPage = document.querySelector("#login-page"), //登陆页面
   /*********************************** /end **************************************/
 
 
-  var localPeerConnection, stream, localStream;
+  var localPeerConnection, stream, localStream, remoteStream;
   var localVideo = document.querySelector("#localVideo"),
       remoteVideo = document.querySelector("#remoteVideo");
-
+  // var audioConstraints = {};
   function gotStreamSuccess(stream) {
     localStream = stream;
     localVideo.srcObject = stream;
@@ -359,15 +352,18 @@ var loginPage = document.querySelector("#login-page"), //登陆页面
       alert('sorry, your browser does not support webrtc')
     }
     // return navigator.mediaDevices.enumerateDevices();
-  }    
+  }
   function startConnection() {
     const audioSource = audioInputSelect.value;
     const videoSource = videoSelect.value;
-    
+
     constraints.video.deviceId = !!videoSource ? {exact: videoSource} : undefined;
-    constraints.audio = {
-      noiseSuppression: true,
-      echoCancellation: true,
+
+    constraints.audio =
+    {
+      noiseSuppression: true, //是否尝试去除音频信号中的背景噪声
+      echoCancellation: true, //是否使用回声消除来尝试去除通过麦克风回传到扬声器的音频
+      autoGainControl: true, //是否要修改麦克风的输入音量
       deviceId: audioSource ? {exact: audioSource} : undefined
     };
     if(hasUserMedia()) {
@@ -389,7 +385,7 @@ var loginPage = document.querySelector("#login-page"), //登陆页面
           callPage.style.display = "none";
           window.location.reload();
           alert('不支持此分辨率');
-          
+
         })
     }else{
       alert('sorry, your browser does not support webrtc')
@@ -404,8 +400,9 @@ var loginPage = document.querySelector("#login-page"), //登陆页面
     // 设置流的监听
     localPeerConnection.addStream(stream);
     localPeerConnection.onaddstream = function (e) {
+      remoteStream = e.stream;
       remoteVideo.srcObject = e.stream;
-      console.log('stream======', e.stream)
+      console.log('stream======', remoteStream)
       getStats(localPeerConnection);
     };
 
@@ -425,7 +422,7 @@ var loginPage = document.querySelector("#login-page"), //登陆页面
 
     // addTrack
     // stream.getTracks().forEach(track => localPeerConnection.addTrack(track, stream));
-    
+
     // 打开数据通道
     openDataChannel();
 
@@ -437,13 +434,13 @@ var loginPage = document.querySelector("#login-page"), //登陆页面
     // var selector = localPeerConnection.getRemoteStreams()[0].getAudioTracks()[0];
   }
 
-/******************** 获取媒体流信息 （点对点连接建立后） *************************/ 
+/******************** 获取媒体流信息 （点对点连接建立后） *************************/
   function getStats(peer) {
     myGetStats(peer, function (results) {
-      console.log('myGetStats======', results);
+      // console.log('myGetStats======', results);
       // for (var i = 0; i < results.length; ++i) {
       //     var res = results[i];
-          
+
       //     // console.log(res);
       // }
       setTimeout(function () {
@@ -503,12 +500,12 @@ var loginPage = document.querySelector("#login-page"), //登陆页面
       addElementStats(_getCallStatistics())
     }, 1000);
   }
-/******************** /end *************************/ 
+/******************** /end *************************/
 
   /**
    * 发起通话
    * 首先发送offer给另一个用户，一旦用户收到这个offer，他将创建一个响应并开始交换ice候选，直到成功连接到服务器
-   * @param {} user 
+   * @param {} user
    */
   var stats_interval;
   function startPeerConnection(user) {
@@ -516,7 +513,7 @@ var loginPage = document.querySelector("#login-page"), //登陆页面
     //开始创建 发送 offer
     sendOffer();
 
-    
+
     // function createdOffer(description) {
     //   localPeerConnection.setLocalDescription(description)
     //   .then(() => {
@@ -615,7 +612,7 @@ var loginPage = document.querySelector("#login-page"), //登陆页面
   }
 
   /***************************** 摄像头/麦克风操作  分割线 *****************************************/
-  
+
   var toggleCameraBtn = document.querySelector("#toggleCamera");
   var toggleMicrophoneBtn = document.querySelector("#toggleMicrophone");
   var mutedVideo = true;
@@ -703,10 +700,10 @@ var loginPage = document.querySelector("#login-page"), //登陆页面
     }
   }
 
-  /***************** 将文件分块 可读 *******************/ 
-  /** 
+  /***************** 将文件分块 可读 *******************/
+  /**
    * Base64编码
-   * @param {ArrayBuffer对象} buffer  
+   * @param {ArrayBuffer对象} buffer
    * 将任意二进制数据转为ASCII编码的字符
    * 在发送文件之前将其转换为Base64编码格式的数据，传送至另一个客户端后对数据进行解码，即得到与源数据文件相同格式的数据。
    * 函数接受一个ArrayBuffer对象作为参数，
@@ -725,8 +722,8 @@ var loginPage = document.querySelector("#login-page"), //登陆页面
 
   /**
    * Base64解码
-   * @param {*} b64Date 
-   * @param {*} contentType 
+   * @param {*} b64Date
+   * @param {*} contentType
    * 第一步是遍历数组并将中间对每一个字符转化成二进制数据
    * 在得到翻译后的数组之后，需要将它转换为blob
    */
@@ -747,7 +744,7 @@ var loginPage = document.querySelector("#login-page"), //登陆页面
     return blob;
   }
 
-  /***************** 文件读取与发送 *******************/ 
+  /***************** 文件读取与发送 *******************/
   // 从文件中读取二进制数据并且发送给另一个用户
   var CHUNK_MAX = 16000;
   /**
@@ -779,7 +776,7 @@ var loginPage = document.querySelector("#login-page"), //登陆页面
         //     last = true;
         //   }
         //   dataChannel.send(arrayBufferToBase64(buffer.slice(start, end)));
-          
+
         //   //如果是最后一块数据的话就发送消息，不然继续发送数据
         //   if(last == true) {
         //     dataChannelSend({
@@ -824,10 +821,11 @@ var loginPage = document.querySelector("#login-page"), //登陆页面
     if(connectedUser){
       message.name = connectedUser;
     }
-    connection.send(JSON.stringify(message))
+    socket.emit(message.type, message)
+    // connection.send(JSON.stringify(message))
   }
-  
-  /********* 动态创建html ********/ 
+
+  /********* 动态创建html ********/
   function addElement(data){
     var eles = "";
     for (var i = 0; i < data.length; i++) {
@@ -868,7 +866,7 @@ var loginPage = document.querySelector("#login-page"), //登陆页面
       // console.log(i, _incoming[i])
     }
   }
-  /******* 随机生成n为数的字符串 *****/ 
+  /******* 随机生成n为数的字符串 *****/
   function randomName(n){
     var chars = ['0','1','2','3','4','5','6','7','8','9'];
     var res = "";

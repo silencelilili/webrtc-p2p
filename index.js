@@ -24,7 +24,7 @@ function createWindow () {
   // 针对windows平台做出不同的配置
   if (process.platform === 'win32') {
     options.show = true; // 创建即展示
-    options.frame = false; // 创建一个framelessc窗口
+    // options.frame = false; // 创建一个frameless窗口
     options.backgroundColor = '#3f3c37'
   }
 
@@ -40,6 +40,8 @@ function createWindow () {
 
   // Open the DevTools.
   // win.webContents.openDevTools()
+  // 添加插件
+  // win.addExtension('assets/svoc/SVOC-Screensharing-Extension.crx')
 
   // Emitted when the window is closed.
   win.on('closed', () => {
@@ -96,7 +98,7 @@ function createMenu() {
       ]
     }
   ]
-  
+
   if (process.platform === 'darwin') {
     template.unshift({
       label: app.getName(),
@@ -112,7 +114,7 @@ function createMenu() {
         { role: 'quit' }
       ]
     })
-  
+
     // Edit menu
     template[1].submenu.push(
       { type: 'separator' },
@@ -124,7 +126,7 @@ function createMenu() {
         ]
       }
     )
-  
+
     // Window menu
     template[3].submenu = [
       { role: 'close' },
@@ -134,7 +136,7 @@ function createMenu() {
       { role: 'front' }
     ]
   }
-  
+
   const menu = Menu.buildFromTemplate(template)
   Menu.setApplicationMenu(menu);
 }
